@@ -36,7 +36,7 @@ export async function createPatientAction(formData: FormData): Promise<ActionRes
 
   const parsed = createPatientSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {
@@ -91,7 +91,7 @@ export async function updatePatientAction(
 
   const parsed = updatePatientSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {
@@ -305,7 +305,7 @@ export async function saveClinicalRecordAction(
 
   const parsed = clinicalRecordSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {
@@ -315,16 +315,24 @@ export async function saveClinicalRecordAction(
       .where(eq(clinicalRecords.patient_id, patientId))
       .limit(1)
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { water_intake_liters, sleep_hours, patient_id: _pid, ...clinicalRest } = parsed.data
+    const numericFields = {
+      water_intake_liters: water_intake_liters?.toString(),
+      sleep_hours: sleep_hours?.toString(),
+    }
+
     if (existing[0]) {
       await db
         .update(clinicalRecords)
-        .set({ ...parsed.data, updated_at: new Date() })
+        .set({ ...clinicalRest, ...numericFields, updated_at: new Date() })
         .where(eq(clinicalRecords.patient_id, patientId))
     } else {
       await db.insert(clinicalRecords).values({
         patient_id: patientId,
         nutritionist_id: nutritionistId,
-        ...parsed.data,
+        ...clinicalRest,
+        ...numericFields,
       })
     }
 

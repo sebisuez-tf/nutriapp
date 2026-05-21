@@ -8,14 +8,15 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  TooltipProps,
+  TooltipContentProps,
 } from 'recharts'
 
 interface PatientGrowthChartProps {
   data: Array<{ month: string; count: number }>
 }
 
-function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CustomTooltip({ active, payload, label }: TooltipContentProps<any, any>) {
   if (!active || !payload || !payload.length) return null
 
   return (
@@ -43,7 +44,7 @@ export function PatientGrowthChart({ data }: PatientGrowthChartProps) {
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
         <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#6b7280' }} />
         <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} allowDecimals={false} />
-        <Tooltip content={<CustomTooltip />} />
+        <Tooltip content={(props) => <CustomTooltip {...props} />} />
         <Bar dataKey="count" fill="#16a34a" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>

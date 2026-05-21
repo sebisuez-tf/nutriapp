@@ -1,5 +1,5 @@
 import { requireRole } from '@/lib/actions/auth'
-import { getGroupById, getGroupAggregateMetrics } from '@/lib/db/queries/groups'
+import { getGroupById, getGroupMembers, getGroupAggregateMetrics } from '@/lib/db/queries/groups'
 import { getPatientsByNutritionistId } from '@/lib/db/queries/nutritionist'
 import { addPatientToGroupAction, removePatientFromGroupAction, inviteCoordinatorAction } from '@/lib/actions/groups'
 import { Button } from '@/components/ui/button'
@@ -26,9 +26,10 @@ export default async function GroupDetailPage({ params }: GroupDetailPageProps) 
   const { nutritionist } = await requireRole(['nutritionist', 'super_admin'])
   if (!nutritionist) return null
 
-  const [groupData, metrics, patientsData] = await Promise.all([
+  const [groupData, metrics, members, patientsData] = await Promise.all([
     getGroupById(id),
     getGroupAggregateMetrics(id),
+    getGroupMembers(id),
     getPatientsByNutritionistId(nutritionist.id),
   ])
 
@@ -36,11 +37,11 @@ export default async function GroupDetailPage({ params }: GroupDetailPageProps) 
     notFound()
   }
 
-  const { group, members } = groupData
+  const { group } = groupData
   const memberPatientIds = new Set(members.map((m) => m.patient_id))
 
   // Patients not yet in group
-  const availablePatients = patientsData.filter((p) => !memberPatientIds.has(p.patient.id))
+  const availablePatients = patientsData.filter((p) => !memberPatientIds.has(p.id))
 
   return (
     <div className="space-y-6">
@@ -145,18 +146,18 @@ export default async function GroupDetailPage({ params }: GroupDetailPageProps) 
                 Agregar paciente
               </h3>
               <div className="max-h-48 overflow-y-auto space-y-1">
-                {availablePatients.map(({ patient }) => (
-                  <form key={patient.id}>
+                {availablePatients.map((p) => (
+                  <form key={p.id}>
                     <button
                       type="submit"
                       formAction={async () => {
                         'use server'
-                        await addPatientToGroupAction(id, patient.id)
+                        await addPatientToGroupAction(id, p.id)
                       }}
                       className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm text-left hover:bg-gray-50 transition-colors"
                     >
                       <span className="text-gray-700">
-                        {patient.first_name} {patient.last_name}
+                        {p.first_name} {p.last_name}
                       </span>
                       <Plus className="h-3.5 w-3.5 text-green-600" />
                     </button>

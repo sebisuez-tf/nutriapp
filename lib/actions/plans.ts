@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { mealPlans, mealSlots, mealItems, auditLogs } from '@/lib/db/schema'
+import { mealPlans, mealSlots, mealItems, auditLogs, patients } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import {
   createMealPlanSchema,
@@ -49,7 +49,7 @@ export async function createMealPlanAction(formData: FormData): Promise<ActionRe
 
   const parsed = createMealPlanSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {
@@ -90,13 +90,20 @@ export async function updateMealPlanAction(
 
   const parsed = updateMealPlanSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {
+    const { total_protein_g, total_carbs_g, total_fat_g, ...rest } = parsed.data
     await db
       .update(mealPlans)
-      .set({ ...parsed.data, updated_at: new Date() })
+      .set({
+        ...rest,
+        total_protein_g: total_protein_g?.toString(),
+        total_carbs_g: total_carbs_g?.toString(),
+        total_fat_g: total_fat_g?.toString(),
+        updated_at: new Date(),
+      })
       .where(
         and(eq(mealPlans.id, planId), eq(mealPlans.nutritionist_id, nutritionistId))
       )
@@ -295,7 +302,7 @@ export async function addMealSlotAction(
 
   const parsed = createMealSlotSchema.safeParse({ meal_plan_id: planId, name, sort_order: sortOrder })
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {
@@ -324,7 +331,7 @@ export async function updateMealSlotAction(
 
   const parsed = updateMealSlotSchema.safeParse(data)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {
@@ -389,7 +396,7 @@ export async function addMealItemAction(
 
   const parsed = createMealItemSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {
@@ -431,11 +438,22 @@ export async function updateMealItemAction(
 
   const parsed = updateMealItemSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {
-    await db.update(mealItems).set(parsed.data).where(eq(mealItems.id, itemId))
+    const { quantity, calories, protein_g, carbs_g, fat_g, ...rest } = parsed.data
+    await db
+      .update(mealItems)
+      .set({
+        ...rest,
+        quantity: quantity?.toString(),
+        calories: calories?.toString(),
+        protein_g: protein_g?.toString(),
+        carbs_g: carbs_g?.toString(),
+        fat_g: fat_g?.toString(),
+      })
+      .where(eq(mealItems.id, itemId))
     return { success: true, data: null }
   } catch (err) {
     console.error('updateMealItemAction error:', err)
@@ -473,5 +491,29 @@ export async function reorderMealItemsAction(
   } catch (err) {
     console.error('reorderMealItemsAction error:', err)
     return { success: false, error: 'Error reordenando alimentos' }
+  }
+}
+
+export async function getPatientsForSelectorAction(): Promise<
+  ActionResult<Array<{ id: string; name: string }>>
+> {
+  const current = await requireRole(['nutritionist', 'super_admin'])
+  const nutritionistId = current.nutritionist?.id
+  if (!nutritionistId) return { success: false, error: 'Nutricionista no encontrado' }
+
+  try {
+    const rows = await db
+      .select({ id: patients.id, first_name: patients.first_name, last_name: patients.last_name })
+      .from(patients)
+      .where(and(eq(patients.nutritionist_id, nutritionistId), eq(patients.is_active, true)))
+      .orderBy(patients.last_name, patients.first_name)
+
+    return {
+      success: true,
+      data: rows.map((p) => ({ id: p.id, name: `${p.first_name} ${p.last_name}` })),
+    }
+  } catch (err) {
+    console.error('getPatientsForSelectorAction error:', err)
+    return { success: false, error: 'Error cargando pacientes' }
   }
 }

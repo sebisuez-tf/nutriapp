@@ -61,7 +61,7 @@ export function GroupForm({ onSuccess }: GroupFormProps) {
 
       <div>
         <Label>Tipo</Label>
-        <Select value={type} onValueChange={setType}>
+        <Select value={type} onValueChange={(val) => setType(val ?? 'category')}>
           <SelectTrigger className="mt-1">
             <SelectValue />
           </SelectTrigger>

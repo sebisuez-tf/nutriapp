@@ -8,7 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  TooltipProps,
+  TooltipContentProps,
 } from 'recharts'
 import { formatDate } from '@/lib/utils'
 
@@ -16,14 +16,15 @@ interface BodyFatChartProps {
   data: Array<{ date: string; body_fat_percentage: number | null }>
 }
 
-function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CustomTooltip({ active, payload, label }: TooltipContentProps<any, any>) {
   if (!active || !payload || !payload.length) return null
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
       <p className="mb-1 text-xs text-gray-500">{formatDate(label as string)}</p>
       <p className="text-sm font-semibold text-orange-600">
-        {payload[0]?.value?.toFixed(1)}%
+        {(payload[0]?.value as number)?.toFixed(1)}%
       </p>
     </div>
   )
@@ -57,7 +58,7 @@ export function BodyFatChart({ data }: BodyFatChartProps) {
           tickFormatter={(val: number) => `${val}%`}
           domain={['auto', 'auto']}
         />
-        <Tooltip content={<CustomTooltip />} />
+        <Tooltip content={(props) => <CustomTooltip {...props} />} />
         <Line
           type="monotone"
           dataKey="body_fat_percentage"

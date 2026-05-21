@@ -35,7 +35,7 @@ export async function updateBrandingAction(formData: FormData): Promise<ActionRe
 
   const parsed = updateBrandingSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {

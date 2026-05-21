@@ -34,11 +34,9 @@ export default async function GroupsPage() {
         description="Gestioná equipos, clubes e instituciones"
         action={
           <Dialog>
-            <DialogTrigger asChild>
-              <Button className="bg-green-600 hover:bg-green-700 text-white">
-                <Plus className="mr-2 h-4 w-4" />
-                Nuevo grupo
-              </Button>
+            <DialogTrigger render={<Button className="bg-green-600 hover:bg-green-700 text-white" />}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo grupo
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
@@ -52,7 +50,7 @@ export default async function GroupsPage() {
 
       {groups.length === 0 ? (
         <EmptyState
-          icon={Users}
+          icon={<Users className="h-7 w-7" />}
           title="Sin grupos"
           description="Creá grupos para gestionar equipos, clubes o instituciones de forma colectiva."
         />

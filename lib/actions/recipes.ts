@@ -54,7 +54,7 @@ export async function createRecipeAction(formData: FormData): Promise<ActionResu
 
   const parsed = createRecipeSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {
@@ -124,15 +124,22 @@ export async function updateRecipeAction(
 
   const parsed = updateRecipeSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {
-    const { ingredients, ...recipeData } = parsed.data
+    const { ingredients, calories_per_serving, protein_per_serving, carbs_per_serving, fat_per_serving, ...recipeData } = parsed.data
 
     await db
       .update(recipes)
-      .set({ ...recipeData, updated_at: new Date() })
+      .set({
+        ...recipeData,
+        calories_per_serving: calories_per_serving?.toString(),
+        protein_per_serving: protein_per_serving?.toString(),
+        carbs_per_serving: carbs_per_serving?.toString(),
+        fat_per_serving: fat_per_serving?.toString(),
+        updated_at: new Date(),
+      })
       .where(and(eq(recipes.id, recipeId), eq(recipes.nutritionist_id, nutritionistId)))
 
     if (ingredients !== undefined) {

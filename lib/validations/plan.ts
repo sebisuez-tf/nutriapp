@@ -9,7 +9,7 @@ export const createMealPlanSchema = z.object({
   total_fat_g: z.number().min(0).max(500).optional(),
   valid_from: z.string().optional(),
   valid_until: z.string().optional(),
-  is_template: z.boolean().default(false),
+  is_template: z.boolean().optional(),
   template_name: z.string().max(200).optional(),
   notes: z.string().max(1000).optional(),
   patient_id: z.string().uuid().optional(),
@@ -21,7 +21,7 @@ export const createMealSlotSchema = z.object({
   meal_plan_id: z.string().uuid(),
   name: z.string().min(1, 'El nombre es requerido').max(100),
   time_of_day: z.string().optional(),
-  sort_order: z.number().int().min(0).default(0),
+  sort_order: z.number().int().min(0).optional(),
   notes: z.string().max(500).optional(),
 })
 
@@ -41,10 +41,10 @@ export const createMealItemSchema = z.object({
   protein_g: z.number().min(0).max(1000).optional(),
   carbs_g: z.number().min(0).max(1000).optional(),
   fat_g: z.number().min(0).max(500).optional(),
-  is_optional: z.boolean().default(false),
+  is_optional: z.boolean().optional(),
   alternatives: z.string().max(500).optional(),
   notes: z.string().max(500).optional(),
-  sort_order: z.number().int().min(0).default(0),
+  sort_order: z.number().int().min(0).optional(),
 })
 
 export const updateMealItemSchema = createMealItemSchema.partial().omit({ meal_slot_id: true })

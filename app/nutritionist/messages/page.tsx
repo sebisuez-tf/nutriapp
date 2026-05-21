@@ -16,7 +16,7 @@ export default async function MessagesPage() {
   const patientsData = await getPatientsByNutritionistId(nutritionist.id)
 
   // For each patient that has messages, get the last message and unread count
-  const patientIds = patientsData.map((p) => p.patient.id)
+  const patientIds = patientsData.map((p) => p.id)
 
   const messageSummaries = await Promise.all(
     patientIds.map(async (patientId) => {
@@ -49,7 +49,7 @@ export default async function MessagesPage() {
   // Filter patients that have at least one message
   const conversationsWithMessages = messageSummaries.filter((s) => s.lastMessage !== null)
 
-  const patientMap = new Map(patientsData.map((p) => [p.patient.id, p.patient]))
+  const patientMap = new Map(patientsData.map((p) => [p.id, p]))
 
   // Sort by last message date descending
   conversationsWithMessages.sort((a, b) => {
@@ -67,7 +67,7 @@ export default async function MessagesPage() {
 
       {conversationsWithMessages.length === 0 ? (
         <EmptyState
-          icon={MessageSquare}
+          icon={<MessageSquare className="h-7 w-7" />}
           title="Sin conversaciones"
           description="Iniciá una conversación abriendo la ficha de un paciente."
         />

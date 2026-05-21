@@ -9,6 +9,7 @@ interface ChatMessage {
   sender_id: string
   receiver_id: string
   patient_id: string
+  nutritionist_id: string
   content: string
   is_read: boolean
   read_at: Date | null

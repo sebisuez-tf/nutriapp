@@ -84,12 +84,12 @@ export async function createMeasurementAction(
 
   const parsed = measurementSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {
     // Compute BMI in application layer
-    let bmi: number | undefined
+    let bmi: number | null | undefined
     if (parsed.data.weight_kg && parsed.data.height_cm) {
       bmi = calculateBMI(parsed.data.weight_kg, parsed.data.height_cm)
     }

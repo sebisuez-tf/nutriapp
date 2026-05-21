@@ -43,7 +43,7 @@ export default async function PlansPage({ searchParams }: PlansPageProps) {
   // Build patient name lookup
   const patientMap = new Map<string, string>()
   for (const p of patients) {
-    patientMap.set(p.patient.id, `${p.patient.first_name} ${p.patient.last_name}`)
+    patientMap.set(p.id, `${p.first_name} ${p.last_name}`)
   }
 
   // Apply template filter after fetching
@@ -88,7 +88,7 @@ export default async function PlansPage({ searchParams }: PlansPageProps) {
       {/* Plans Grid */}
       {filtered.length === 0 ? (
         <EmptyState
-          icon={FileText}
+          icon={<FileText className="h-7 w-7" />}
           title="Sin planes"
           description={
             activeFilter === 'all'

@@ -35,9 +35,9 @@ export default async function AppointmentsPage() {
   }))
 
   const patients = patientsData.map((p) => ({
-    id: p.patient.id,
-    first_name: p.patient.first_name,
-    last_name: p.patient.last_name,
+    id: p.id,
+    first_name: p.first_name,
+    last_name: p.last_name,
   }))
 
   return (
@@ -47,11 +47,9 @@ export default async function AppointmentsPage() {
         description="Gestioná los turnos de tus pacientes"
         action={
           <Dialog>
-            <DialogTrigger asChild>
-              <Button className="bg-green-600 hover:bg-green-700 text-white">
-                <Plus className="mr-2 h-4 w-4" />
-                Nuevo turno
-              </Button>
+            <DialogTrigger render={<Button className="bg-green-600 hover:bg-green-700 text-white" />}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo turno
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>

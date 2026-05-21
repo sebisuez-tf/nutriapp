@@ -59,19 +59,15 @@ export function PlanCard({ plan, patientName }: PlanCardProps) {
             {statusConfig.label}
           </Badge>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                <MoreVertical className="h-3.5 w-3.5" />
-              </Button>
+            <DropdownMenuTrigger render={<Button variant="ghost" size="sm" className="h-7 w-7 p-0" />}>
+              <MoreVertical className="h-3.5 w-3.5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href={`/nutritionist/plans/${plan.id}`}>
-                  <Eye className="mr-2 h-4 w-4" />
-                  Ver / Editar
-                </Link>
+              <DropdownMenuItem render={<Link href={`/nutritionist/plans/${plan.id}`} />}>
+                <Eye className="mr-2 h-4 w-4" />
+                Ver / Editar
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
+              <DropdownMenuItem>
                 <form>
                   <button
                     type="submit"
@@ -133,10 +129,11 @@ export function PlanCard({ plan, patientName }: PlanCardProps) {
         {plan.is_template && <FileText className="h-3.5 w-3.5" />}
       </div>
 
-      <Link href={`/nutritionist/plans/${plan.id}`} className="mt-3">
-        <Button variant="outline" size="sm" className="w-full">
-          Editar plan
-        </Button>
+      <Link
+        href={`/nutritionist/plans/${plan.id}`}
+        className="mt-3 inline-flex h-7 w-full items-center justify-center rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
+      >
+        Editar plan
       </Link>
     </div>
   )

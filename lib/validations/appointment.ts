@@ -3,8 +3,8 @@ import { z } from 'zod'
 export const createAppointmentSchema = z.object({
   patient_id: z.string().uuid(),
   scheduled_at: z.string().datetime(),
-  duration_minutes: z.number().min(15).max(180).default(60),
-  type: z.enum(['initial', 'followup', 'online', 'remote']).default('followup'),
+  duration_minutes: z.number().min(15).max(180).optional(),
+  type: z.enum(['initial', 'followup', 'online', 'remote']).optional(),
   notes: z.string().max(1000).optional(),
 })
 

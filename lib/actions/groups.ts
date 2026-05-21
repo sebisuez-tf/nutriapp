@@ -38,7 +38,7 @@ export async function createGroupAction(formData: FormData): Promise<ActionResul
 
   const parsed = createGroupSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {
@@ -78,7 +78,7 @@ export async function updateGroupAction(
 
   const parsed = updateGroupSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {

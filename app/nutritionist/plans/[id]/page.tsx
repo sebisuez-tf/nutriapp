@@ -29,6 +29,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Badge } from '@/components/ui/badge'
 import { MacroTotals } from '@/components/nutritionist/MacroTotals'
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner'
@@ -40,6 +49,7 @@ import {
   reorderMealItemsAction,
   updateMealPlanAction,
   activateMealPlanAction,
+  getPatientsForSelectorAction,
 } from '@/lib/actions/plans'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -51,6 +61,8 @@ import {
   ChevronDown,
   ChevronUp,
   Zap,
+  ChevronsUpDown,
+  Check,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -220,11 +232,9 @@ function AddItemForm({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="mt-1 h-7 text-xs text-green-700">
-          <Plus className="mr-1 h-3 w-3" />
-          Agregar alimento
-        </Button>
+      <DialogTrigger render={<Button variant="ghost" size="sm" className="mt-1 h-7 text-xs text-green-700" />}>
+        <Plus className="mr-1 h-3 w-3" />
+        Agregar alimento
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
@@ -437,6 +447,8 @@ export default function PlanEditorPage() {
   const [newSlotName, setNewSlotName] = useState('')
   const [activatingPatientId, setActivatingPatientId] = useState('')
   const [activating, setActivating] = useState(false)
+  const [patients, setPatients] = useState<Array<{ id: string; name: string }>>([])
+  const [patientComboOpen, setPatientComboOpen] = useState(false)
 
   const fetchPlan = useCallback(async () => {
     try {
@@ -456,6 +468,9 @@ export default function PlanEditorPage() {
 
   useEffect(() => {
     fetchPlan()
+    getPatientsForSelectorAction().then((result) => {
+      if (result.success) setPatients(result.data)
+    })
   }, [fetchPlan])
 
   async function handleAddSlot() {
@@ -626,12 +641,42 @@ export default function PlanEditorPage() {
               <p className="text-xs text-gray-500">
                 Asigná este plan a un paciente y actívalo como plan vigente.
               </p>
-              <Input
-                value={activatingPatientId}
-                onChange={(e) => setActivatingPatientId(e.target.value)}
-                placeholder="ID del paciente"
-                className="text-xs"
-              />
+              <Popover open={patientComboOpen} onOpenChange={setPatientComboOpen}>
+                <PopoverTrigger render={<Button variant="outline" role="combobox" aria-expanded={patientComboOpen} className="w-full justify-between text-xs font-normal" size="sm" />}>
+                  {activatingPatientId
+                    ? (patients.find((p) => p.id === activatingPatientId)?.name ?? 'Paciente seleccionado')
+                    : 'Seleccionar paciente...'}
+                  <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Buscar paciente..." className="h-8 text-xs" />
+                    <CommandList>
+                      <CommandEmpty className="py-3 text-center text-xs text-gray-500">
+                        Sin resultados
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {patients.map((p) => (
+                          <CommandItem
+                            key={p.id}
+                            value={p.name}
+                            onSelect={() => {
+                              setActivatingPatientId(p.id)
+                              setPatientComboOpen(false)
+                            }}
+                            className="text-xs"
+                          >
+                            <Check
+                              className={`mr-2 h-3.5 w-3.5 ${activatingPatientId === p.id ? 'opacity-100' : 'opacity-0'}`}
+                            />
+                            {p.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <Button
                 type="button"
                 onClick={handleActivate}

@@ -29,7 +29,7 @@ export async function createAppointmentAction(formData: FormData): Promise<Actio
 
   const parsed = createAppointmentSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {
@@ -39,8 +39,8 @@ export async function createAppointmentAction(formData: FormData): Promise<Actio
         nutritionist_id: nutritionistId,
         patient_id: parsed.data.patient_id,
         scheduled_at: new Date(parsed.data.scheduled_at),
-        duration_minutes: parsed.data.duration_minutes,
-        type: parsed.data.type,
+        duration_minutes: parsed.data.duration_minutes ?? 60,
+        type: parsed.data.type ?? 'followup',
         notes: parsed.data.notes,
       })
       .returning()
@@ -73,7 +73,7 @@ export async function createAppointmentAction(formData: FormData): Promise<Actio
           patientEmail: patient.email,
           patientName: `${patient.first_name} ${patient.last_name}`,
           scheduledAt: new Date(parsed.data.scheduled_at),
-          durationMinutes: parsed.data.duration_minutes,
+          durationMinutes: parsed.data.duration_minutes ?? 60,
           nutritionistName: nutritionist.business_name || current.profile.full_name,
           nutritionistPhone: nutritionist.contact_phone ?? undefined,
           branding: {
@@ -111,7 +111,7 @@ export async function updateAppointmentAction(
 
   const parsed = updateAppointmentSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {

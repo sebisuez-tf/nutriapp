@@ -31,7 +31,7 @@ export async function loginAction(formData: FormData): Promise<ActionResult<null
 
   const parsed = loginSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   const supabase = await createClient()
@@ -63,7 +63,7 @@ export async function forgotPasswordAction(
   const parsed = forgotPasswordSchema.safeParse(raw)
 
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Email inválido' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Email inválido' }
   }
 
   const supabase = await createClient()
@@ -88,7 +88,7 @@ export async function resetPasswordAction(
 
   const parsed = resetPasswordSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   const supabase = await createClient()
@@ -182,7 +182,7 @@ export async function inviteNutritionistAction(
 
   const parsed = inviteNutritionistSchema.safeParse(raw)
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
+    return { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' }
   }
 
   try {

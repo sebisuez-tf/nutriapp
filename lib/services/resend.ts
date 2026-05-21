@@ -2,7 +2,12 @@ import { Resend } from 'resend'
 import type { NutritionistBranding } from '@/types'
 import { formatDateTime } from '@/lib/utils'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// DECISIÓN: lazy init — Resend throws at construction if key is absent, which breaks build-time page collection
+let _resend: Resend | null = null
+function getResend(): Resend {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY!)
+  return _resend
+}
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'noreply@nutriapp.com'
 
 function brandedHeader(branding: NutritionistBranding): string {
@@ -59,7 +64,7 @@ export async function sendAppointmentConfirmation(params: {
     <p style="color:#6b7280;font-size:14px;">Si necesitás cancelar o reprogramar, por favor contactá a tu nutricionista con anticipación.</p>
   `
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM_EMAIL,
     to: params.patientEmail,
     subject: `Turno confirmado - ${formatDateTime(params.scheduledAt)}`,
@@ -87,7 +92,7 @@ export async function sendPatientInvite(params: {
     <p style="color:#6b7280;font-size:12px;">Este enlace expira en 24 horas. Si no solicitaste este acceso, ignorá este email.</p>
   `
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM_EMAIL,
     to: params.patientEmail,
     subject: `Acceso a tu portal nutricional - ${params.branding.business_name}`,
@@ -119,7 +124,7 @@ export async function sendNutritionistInvite(params: {
     <p style="color:#6b7280;font-size:12px;">Este enlace expira en 24 horas.</p>
   `
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM_EMAIL,
     to: params.email,
     subject: 'Invitación a NutriApp',
@@ -149,7 +154,7 @@ export async function sendDocumentEmail(params: {
     </div>
   `
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM_EMAIL,
     to: params.patientEmail,
     subject: `${params.documentTitle} - ${params.branding.business_name}`,

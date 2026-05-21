@@ -128,6 +128,10 @@ export async function generateAnthropometricPDFAction(
       muscle_mass_kg: m.muscle_mass_kg ? parseFloat(m.muscle_mass_kg) : null,
     }))
 
+    // DECISIÓN: cast necesario — createElement devuelve FunctionComponentElement<Props>
+    // pero renderToBuffer espera ReactElement<DocumentProps>. El componente es válido ya que
+    // su root element es <Document> de @react-pdf/renderer.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pdfBuffer = await renderToBuffer(
       createElement(AnthropometricReportTemplate, {
         nutritionist: {
@@ -143,7 +147,7 @@ export async function generateAnthropometricPDFAction(
           date_of_birth: patient.date_of_birth,
         },
         measurements: mappedMeasurements,
-      })
+      }) as any
     )
 
     const timestamp = Date.now()
@@ -249,6 +253,7 @@ export async function generateMealPlanPDFAction(
     const { createElement } = await import('react')
     const { MealPlanTemplate } = await import('@/lib/pdf/MealPlanTemplate')
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pdfBuffer = await renderToBuffer(
       createElement(MealPlanTemplate, {
         nutritionist: {
@@ -274,7 +279,7 @@ export async function generateMealPlanPDFAction(
         },
         slots,
         items: itemsBySlot,
-      })
+      }) as any
     )
 
     const timestamp = Date.now()

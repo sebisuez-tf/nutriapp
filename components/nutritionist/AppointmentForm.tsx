@@ -62,8 +62,8 @@ export function AppointmentForm({
     const fd = new FormData()
     fd.set('patient_id', data.patient_id)
     fd.set('scheduled_at', new Date(data.scheduled_at).toISOString())
-    fd.set('duration_minutes', String(data.duration_minutes))
-    fd.set('type', data.type)
+    fd.set('duration_minutes', String(data.duration_minutes ?? 60))
+    fd.set('type', data.type ?? 'followup')
     if (data.notes) fd.set('notes', data.notes)
 
     const result = await createAppointmentAction(fd)
@@ -83,7 +83,7 @@ export function AppointmentForm({
       <div>
         <Label>Paciente *</Label>
         <Select
-          onValueChange={(val) => setValue('patient_id', val)}
+          onValueChange={(val) => setValue('patient_id', val ?? '')}
           defaultValue={preselectedPatientId}
         >
           <SelectTrigger className="mt-1">
@@ -138,7 +138,7 @@ export function AppointmentForm({
           <Label>Tipo</Label>
           <Select
             onValueChange={(val) =>
-              setValue('type', val as CreateAppointmentInput['type'])
+              setValue('type', (val ?? 'followup') as CreateAppointmentInput['type'])
             }
             defaultValue="followup"
           >
