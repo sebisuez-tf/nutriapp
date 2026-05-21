@@ -37,6 +37,27 @@ export async function uploadBuffer(
   return urlData.publicUrl
 }
 
+// Uploads a PDF buffer and returns the storage path (not public URL).
+// Use getSignedUrl(bucket, path, 3600) to generate download URLs.
+export async function uploadPDFBuffer(
+  bucket: string,
+  path: string,
+  buffer: Buffer
+): Promise<string> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.storage.from(bucket).upload(path, buffer, {
+    upsert: true,
+    contentType: 'application/pdf',
+  })
+
+  if (error) {
+    throw new Error(`Error uploading PDF: ${error.message}`)
+  }
+
+  return data.path
+}
+
 export async function getSignedUrl(
   bucket: string,
   path: string,

@@ -18,14 +18,14 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ArrowLeft, UserCheck, UserX, RotateCcw, Download, Send } from 'lucide-react'
+import { ArrowLeft, UserCheck, UserX, RotateCcw } from 'lucide-react'
 import { formatDate, formatDateTime, isAccessExpired, isAccessExpiringSoon } from '@/lib/utils'
 import {
   togglePatientAccessAction,
   renewPatientAccessAction,
 } from '@/lib/actions/patients'
-import { sendDocumentToPatientAction } from '@/lib/actions/documents'
-import { FileText, Activity, Calendar, List } from 'lucide-react'
+import { PatientDocumentsTab } from '@/components/nutritionist/PatientDocumentsTab'
+import { Activity, Calendar, List } from 'lucide-react'
 
 export default async function PatientDetailPage({
   params,
@@ -400,54 +400,23 @@ export default async function PatientDetailPage({
 
         {/* Documents Tab */}
         <TabsContent value="documents" className="pt-4">
-          <div className="mb-4">
-            <h3 className="font-semibold text-gray-900">Documentos</h3>
-          </div>
-          {documents.length === 0 ? (
-            <EmptyState
-              icon={<FileText className="h-6 w-6" />}
-              title="Sin documentos generados"
-              description="Generá PDF de planes alimentarios o informes antropométricos"
-            />
-          ) : (
-            <div className="space-y-2">
-              {documents.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="flex items-center justify-between rounded-lg border border-gray-100 bg-white p-3 shadow-sm"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{doc.title}</p>
-                    <p className="text-xs text-gray-500">
-                      {formatDate(doc.generated_at)}
-                      {doc.is_sent_to_patient && ' · Enviado'}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                      <Button variant="ghost" size="sm">
-                        <Download className="h-3.5 w-3.5" />
-                      </Button>
-                    </a>
-                    {!doc.is_sent_to_patient && (
-                      <form>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          formAction={async () => {
-                            'use server'
-                            await sendDocumentToPatientAction(doc.id)
-                          }}
-                        >
-                          <Send className="h-3.5 w-3.5" />
-                        </Button>
-                      </form>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <PatientDocumentsTab
+            patientId={id}
+            patientEmail={patient.email}
+            documents={documents.map((d) => ({
+              id: d.id,
+              title: d.title,
+              type: d.type,
+              file_url: d.file_url,
+              generated_at: d.generated_at,
+              is_sent_to_patient: d.is_sent_to_patient,
+            }))}
+            mealPlans={mealPlans.map((p) => ({
+              id: p.id,
+              title: p.title,
+              status: p.status,
+            }))}
+          />
         </TabsContent>
       </Tabs>
     </div>

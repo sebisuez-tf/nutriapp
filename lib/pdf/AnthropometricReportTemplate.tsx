@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, Image, Svg, Polyline, Line, G } from '@react-pdf/renderer'
 import { formatDate } from '@/lib/utils'
 
 interface NutritionistData {
@@ -134,6 +134,20 @@ const styles = StyleSheet.create({
     color: '#374151',
     lineHeight: 1.5,
   },
+  chartContainer: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 4,
+    padding: 8,
+    backgroundColor: '#fafafa',
+    marginBottom: 4,
+  },
+  chartLabel: {
+    fontSize: 8,
+    color: '#6b7280',
+    marginBottom: 6,
+    fontFamily: 'Helvetica-Bold',
+  },
 })
 
 function getAge(dateOfBirth: string | null): string {
@@ -141,6 +155,219 @@ function getAge(dateOfBirth: string | null): string {
   const birth = new Date(dateOfBirth)
   const now = new Date()
   return `${now.getFullYear() - birth.getFullYear()} años`
+}
+
+// DECISIÓN: Gráfico de líneas renderizado como SVG vectorial nativo de react-pdf.
+// No requiere DOM ni canvas — funciona 100% server-side.
+function WeightChartPDF({
+  measurements,
+  primaryColor,
+}: {
+  measurements: MeasurementData[]
+  primaryColor: string
+}) {
+  const dataPoints = measurements
+    .map((m) => ({ date: m.measured_at, value: m.weight_kg }))
+    .filter((d): d is { date: string; value: number } => d.value !== null)
+
+  if (dataPoints.length < 2) return null
+
+  const W = 450
+  const H = 120
+  const PADDING = { top: 10, right: 10, bottom: 25, left: 35 }
+  const chartW = W - PADDING.left - PADDING.right
+  const chartH = H - PADDING.top - PADDING.bottom
+
+  const values = dataPoints.map((d) => d.value)
+  const minVal = Math.min(...values) - 1
+  const maxVal = Math.max(...values) + 1
+
+  const toX = (i: number) => PADDING.left + (i / (dataPoints.length - 1)) * chartW
+  const toY = (v: number) =>
+    PADDING.top + chartH - ((v - minVal) / (maxVal - minVal)) * chartH
+
+  const points = dataPoints.map((d, i) => `${toX(i).toFixed(1)},${toY(d.value).toFixed(1)}`).join(' ')
+
+  // Y-axis ticks
+  const yTicks = [minVal + 1, (minVal + maxVal) / 2, maxVal - 1].map((v) => ({
+    y: toY(v),
+    label: v.toFixed(1),
+  }))
+
+  // X-axis labels (first, middle, last)
+  const xLabels = [0, Math.floor((dataPoints.length - 1) / 2), dataPoints.length - 1].map(
+    (i) => ({
+      x: toX(i),
+      label: formatDate(dataPoints[i].date).slice(0, 8),
+    })
+  )
+
+  return (
+    <View style={styles.chartContainer}>
+      <Text style={styles.chartLabel}>Evolución del Peso (kg)</Text>
+      <Svg width={W} height={H}>
+        {/* Grid lines */}
+        {yTicks.map((tick, i) => (
+          <G key={i}>
+            <Line
+              x1={PADDING.left}
+              y1={tick.y}
+              x2={W - PADDING.right}
+              y2={tick.y}
+              stroke="#e5e7eb"
+              strokeWidth={0.5}
+            />
+            <Text
+              style={{
+                fontSize: 6,
+                color: '#9ca3af',
+              }}
+              x={PADDING.left - 2}
+              y={tick.y + 2}
+            >
+              {tick.label}
+            </Text>
+          </G>
+        ))}
+
+        {/* X-axis */}
+        <Line
+          x1={PADDING.left}
+          y1={PADDING.top + chartH}
+          x2={W - PADDING.right}
+          y2={PADDING.top + chartH}
+          stroke="#d1d5db"
+          strokeWidth={1}
+        />
+
+        {/* Y-axis */}
+        <Line
+          x1={PADDING.left}
+          y1={PADDING.top}
+          x2={PADDING.left}
+          y2={PADDING.top + chartH}
+          stroke="#d1d5db"
+          strokeWidth={1}
+        />
+
+        {/* Area fill (simplified as a lighter polyline) */}
+        <Polyline
+          points={points}
+          stroke={primaryColor}
+          strokeWidth={2}
+          fill="none"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+
+        {/* Data points */}
+        {dataPoints.map((d, i) => (
+          <G key={i}>
+            <Line
+              x1={toX(i)}
+              y1={toY(d.value) - 3}
+              x2={toX(i)}
+              y2={toY(d.value) + 3}
+              stroke={primaryColor}
+              strokeWidth={3}
+              strokeLinecap="round"
+            />
+          </G>
+        ))}
+
+        {/* X-axis date labels */}
+        {xLabels.map((l, i) => (
+          <Text
+            key={i}
+            style={{ fontSize: 6, color: '#6b7280' }}
+            x={l.x - 12}
+            y={H - 6}
+          >
+            {l.label}
+          </Text>
+        ))}
+      </Svg>
+    </View>
+  )
+}
+
+function BodyFatChartPDF({
+  measurements,
+  primaryColor,
+}: {
+  measurements: MeasurementData[]
+  primaryColor: string
+}) {
+  const dataPoints = measurements
+    .map((m) => ({ date: m.measured_at, value: m.body_fat_percentage }))
+    .filter((d): d is { date: string; value: number } => d.value !== null)
+
+  if (dataPoints.length < 2) return null
+
+  const W = 450
+  const H = 100
+  const PADDING = { top: 10, right: 10, bottom: 25, left: 35 }
+  const chartW = W - PADDING.left - PADDING.right
+  const chartH = H - PADDING.top - PADDING.bottom
+
+  const values = dataPoints.map((d) => d.value)
+  const minVal = Math.max(0, Math.min(...values) - 2)
+  const maxVal = Math.min(60, Math.max(...values) + 2)
+
+  const toX = (i: number) => PADDING.left + (i / (dataPoints.length - 1)) * chartW
+  const toY = (v: number) =>
+    PADDING.top + chartH - ((v - minVal) / (maxVal - minVal)) * chartH
+
+  const points = dataPoints.map((d, i) => `${toX(i).toFixed(1)},${toY(d.value).toFixed(1)}`).join(' ')
+
+  const xLabels = [0, dataPoints.length - 1].map((i) => ({
+    x: toX(i),
+    label: formatDate(dataPoints[i].date).slice(0, 8),
+  }))
+
+  return (
+    <View style={styles.chartContainer}>
+      <Text style={styles.chartLabel}>Evolución de Grasa Corporal (%)</Text>
+      <Svg width={W} height={H}>
+        <Line
+          x1={PADDING.left}
+          y1={PADDING.top + chartH}
+          x2={W - PADDING.right}
+          y2={PADDING.top + chartH}
+          stroke="#d1d5db"
+          strokeWidth={1}
+        />
+        <Line
+          x1={PADDING.left}
+          y1={PADDING.top}
+          x2={PADDING.left}
+          y2={PADDING.top + chartH}
+          stroke="#d1d5db"
+          strokeWidth={1}
+        />
+        <Polyline
+          points={points}
+          stroke="#dc2626"
+          strokeWidth={2}
+          fill="none"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+        {xLabels.map((l, i) => (
+          <Text key={i} style={{ fontSize: 6, color: '#6b7280' }} x={l.x - 12} y={H - 6}>
+            {l.label}
+          </Text>
+        ))}
+        <Text
+          style={{ fontSize: 7, color: '#9ca3af' }}
+          x={PADDING.left - 2}
+          y={PADDING.top + chartH / 2}
+        >
+          {((minVal + maxVal) / 2).toFixed(0)}%
+        </Text>
+      </Svg>
+    </View>
+  )
 }
 
 export function AnthropometricReportTemplate({
@@ -189,9 +416,18 @@ export function AnthropometricReportTemplate({
             </View>
             <View style={styles.infoRow}>
               <Text style={styles.label}>Fecha del informe:</Text>
-              <Text style={styles.value}>{formatDate(new Date())}</Text>
+              <Text style={styles.value}>{formatDate(new Date().toISOString())}</Text>
             </View>
           </View>
+
+          {/* Charts */}
+          {measurements.length >= 2 && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: primaryColor }]}>Evolución Gráfica</Text>
+              <WeightChartPDF measurements={measurements} primaryColor={primaryColor} />
+              <BodyFatChartPDF measurements={measurements} primaryColor={primaryColor} />
+            </View>
+          )}
 
           {/* Summary Comparison */}
           {first && latest && measurements.length > 1 && (

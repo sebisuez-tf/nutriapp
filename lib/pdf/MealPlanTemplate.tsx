@@ -18,6 +18,9 @@ interface PlanData {
   title: string
   description: string | null
   total_calories: number | null
+  total_protein_g: number | null
+  total_carbs_g: number | null
+  total_fat_g: number | null
   valid_from: string | null
   valid_until: string | null
 }
@@ -254,8 +257,32 @@ export function MealPlanTemplate({
             <View style={styles.macroBar}>
               <View style={styles.macroItem}>
                 <Text style={styles.macroValue}>{plan.total_calories}</Text>
-                <Text style={styles.macroLabel}>Calorías</Text>
+                <Text style={styles.macroLabel}>kcal</Text>
               </View>
+              {plan.total_protein_g != null && (
+                <View style={styles.macroItem}>
+                  <Text style={[styles.macroValue, { color: '#2563eb' }]}>
+                    {plan.total_protein_g.toFixed(0)}g
+                  </Text>
+                  <Text style={styles.macroLabel}>Proteína</Text>
+                </View>
+              )}
+              {plan.total_carbs_g != null && (
+                <View style={styles.macroItem}>
+                  <Text style={[styles.macroValue, { color: '#d97706' }]}>
+                    {plan.total_carbs_g.toFixed(0)}g
+                  </Text>
+                  <Text style={styles.macroLabel}>Carbos</Text>
+                </View>
+              )}
+              {plan.total_fat_g != null && (
+                <View style={styles.macroItem}>
+                  <Text style={[styles.macroValue, { color: '#dc2626' }]}>
+                    {plan.total_fat_g.toFixed(0)}g
+                  </Text>
+                  <Text style={styles.macroLabel}>Grasas</Text>
+                </View>
+              )}
             </View>
           )}
 
